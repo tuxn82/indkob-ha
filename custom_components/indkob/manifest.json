@@ -1,0 +1,13 @@
+{
+  "domain": "indkob",
+  "name": "Indkøb",
+  "codeowners": ["@tuxn82"],
+  "config_flow": true,
+  "dependencies": ["todo"],
+  "documentation": "https://github.com/tuxn82/indkob-ha",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/tuxn82/indkob-ha/issues",
+  "requirements": [],
+  "version": "0.2.0"
+}

@@ -1,0 +1,100 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Indkøb",
+        "description": "Log ind med din nemlig.com-konto.",
+        "data": {
+          "username": "E-mail",
+          "password": "Adgangskode"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Login fejlede. Tjek e-mail og adgangskode.",
+      "cannot_connect": "Kunne ikke forbinde til nemlig.com."
+    },
+    "abort": {
+      "already_configured": "Denne konto er allerede sat op."
+    }
+  },
+  "entity": {
+    "todo": {
+      "shopping_list": {
+        "name": "Indkøbsliste"
+      }
+    },
+    "sensor": {
+      "basket_total": {
+        "name": "nemlig kurv total"
+      },
+      "basket_products": {
+        "name": "nemlig varer i kurv"
+      }
+    }
+  },
+  "services": {
+    "add_by_barcode": {
+      "name": "Tilføj via stregkode",
+      "description": "Slår en stregkode op og sætter varen på indkøbslisten (eller tæller antallet op).",
+      "fields": {
+        "barcode": {
+          "name": "Stregkode",
+          "description": "EAN/GTIN."
+        },
+        "quantity": {
+          "name": "Antal",
+          "description": "Antal stk."
+        }
+      }
+    },
+    "send_to_nemlig": {
+      "name": "Send til nemlig",
+      "description": "Lægger alle åbne varer på listen i nemlig-kurven og markerer dem som klaret. Usikre varer giver en notifikation.",
+      "fields": {
+        "dry_run": {
+          "name": "Tørkørsel",
+          "description": "Vis kun hvad der ville ske."
+        }
+      }
+    },
+    "resolve_item": {
+      "name": "Vælg vare",
+      "description": "Kobler en vare på listen til et nemlig-produkt. Koblingen huskes.",
+      "fields": {
+        "item": {
+          "name": "Vare",
+          "description": "Varens navn på listen."
+        },
+        "product_id": {
+          "name": "Produkt-id",
+          "description": "nemligs produkt-id, fx 701011."
+        }
+      }
+    },
+    "forget_match": {
+      "name": "Glem kobling",
+      "description": "Glemmer en husket kobling for en stregkode eller et varenavn.",
+      "fields": {
+        "key": {
+          "name": "Stregkode eller navn",
+          "description": "Fx 5700426101217 eller mælk."
+        }
+      }
+    },
+    "search": {
+      "name": "Søg på nemlig",
+      "description": "Søger på nemlig.com og returnerer varer.",
+      "fields": {
+        "query": {
+          "name": "Søgetekst",
+          "description": "Hvad der søges efter."
+        },
+        "limit": {
+          "name": "Maks. antal",
+          "description": "Maksimalt antal resultater."
+        }
+      }
+    }
+  }
+}

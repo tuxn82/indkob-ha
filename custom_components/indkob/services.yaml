@@ -1,0 +1,57 @@
+add_by_barcode:
+  fields:
+    barcode:
+      required: true
+      example: "5700426101217"
+      selector:
+        text:
+    quantity:
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 99
+          mode: box
+
+send_to_nemlig:
+  fields:
+    dry_run:
+      default: false
+      selector:
+        boolean:
+
+resolve_item:
+  fields:
+    item:
+      required: true
+      example: "Letmælk"
+      selector:
+        text:
+    product_id:
+      required: true
+      example: "701011"
+      selector:
+        text:
+
+forget_match:
+  fields:
+    key:
+      required: true
+      example: "5700426101217"
+      selector:
+        text:
+
+search:
+  fields:
+    query:
+      required: true
+      example: "letmælk"
+      selector:
+        text:
+    limit:
+      default: 10
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box

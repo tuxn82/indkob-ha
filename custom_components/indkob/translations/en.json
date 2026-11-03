@@ -1,0 +1,100 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Shopping",
+        "description": "Log in with your nemlig.com account.",
+        "data": {
+          "username": "Email",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Login failed. Check email and password.",
+      "cannot_connect": "Could not connect to nemlig.com."
+    },
+    "abort": {
+      "already_configured": "This account is already configured."
+    }
+  },
+  "entity": {
+    "todo": {
+      "shopping_list": {
+        "name": "Shopping list"
+      }
+    },
+    "sensor": {
+      "basket_total": {
+        "name": "nemlig basket total"
+      },
+      "basket_products": {
+        "name": "nemlig products in basket"
+      }
+    }
+  },
+  "services": {
+    "add_by_barcode": {
+      "name": "Add by barcode",
+      "description": "Looks up a barcode and puts the product on the shopping list (or increases the quantity).",
+      "fields": {
+        "barcode": {
+          "name": "Barcode",
+          "description": "EAN/GTIN."
+        },
+        "quantity": {
+          "name": "Quantity",
+          "description": "Number of items."
+        }
+      }
+    },
+    "send_to_nemlig": {
+      "name": "Send to nemlig",
+      "description": "Adds all open list items to the nemlig basket and completes them. Uncertain items create a notification.",
+      "fields": {
+        "dry_run": {
+          "name": "Dry run",
+          "description": "Only show what would happen."
+        }
+      }
+    },
+    "resolve_item": {
+      "name": "Resolve item",
+      "description": "Links a list item to a nemlig product. The link is remembered.",
+      "fields": {
+        "item": {
+          "name": "Item",
+          "description": "The item name on the list."
+        },
+        "product_id": {
+          "name": "Product ID",
+          "description": "nemlig product id, e.g. 701011."
+        }
+      }
+    },
+    "forget_match": {
+      "name": "Forget match",
+      "description": "Forgets a remembered link for a barcode or item name.",
+      "fields": {
+        "key": {
+          "name": "Barcode or name",
+          "description": "E.g. 5700426101217 or milk."
+        }
+      }
+    },
+    "search": {
+      "name": "Search nemlig",
+      "description": "Searches nemlig.com and returns products.",
+      "fields": {
+        "query": {
+          "name": "Query",
+          "description": "Search text."
+        },
+        "limit": {
+          "name": "Limit",
+          "description": "Maximum number of results."
+        }
+      }
+    }
+  }
+}
