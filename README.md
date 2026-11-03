@@ -32,7 +32,21 @@ Stregkoder slås op i [Open Food Facts](https://world.openfoodfacts.org) for nav
 
 Entitets-id'erne følger Home Assistants sprog, da de dannes ud fra navnene. Kører HA på dansk, hedder listen fx `todo.indkob_indkobsliste`.
 
-## Scan med telefonens kamera
+## Dashboard-kort
+
+Integrationen leverer to kort, der indlæses automatisk.
+
+**Indkøbslisten med antal-knapper:**
+
+```yaml
+type: custom:indkob-list-card
+entity: todo.indkob_shopping_list   # standard
+show_send: true                      # vis "Send til nemlig"
+```
+
+Hver vare har − og +. Ved antal 1 bliver − til en skraldespand. Under navnet står det valgte nemlig-produkt. "Send til nemlig" kræver to tryk, så man ikke sender ved et uheld.
+
+### Scan med telefonens kamera
 
 Integrationen leverer et dashboard-kort, der bruger telefonens kamera:
 
@@ -42,7 +56,7 @@ continuous: true   # bliv ved med at scanne (standard)
 quantity: 1        # antal pr. scanning
 ```
 
-Tryk **Start kamera**, og hold stregkoden ind i billedet. Telefonen vibrerer ved et fund, og varen kommer på indkøbslisten. Samme stregkode tælles først igen efter et par sekunder, så den ikke registreres flere gange ved et uheld. Man kan også taste stregkoden.
+Tryk **Start kamera**, og hold stregkoden ind i billedet. Ved et fund bipper telefonen, vibrerer (i Home Assistant-appen) og viser et flueben med varens navn, og varen kommer på indkøbslisten. Samme stregkode tælles først igen, når den har været ude af billedet i 1,5 sekund: vil du have to af noget, så flyt varen væk og frem igen. Man kan også taste stregkoden.
 
 Kameraet kræver, at Home Assistant åbnes via **HTTPS**. Virker kortet ikke i companion-appen, så giv appen adgang til kameraet i telefonens indstillinger, eller åbn HA i telefonens browser.
 

@@ -17,7 +17,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CARD_URL, DOMAIN, VERSION
+from .const import CARD_BASE_URL, CARD_FILES, DOMAIN, VERSION
 from .coordinator import NemligCoordinator
 from .nemlig_api import NemligAuthError, NemligClient, NemligError
 from .services import async_setup_services
@@ -41,12 +41,14 @@ type IndkobConfigEntry = ConfigEntry[IndkobData]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_setup_services(hass)
-    # Scanner-kortet serveres af integrationen og indlæses automatisk i frontend
-    card = Path(__file__).parent / "www" / "indkob-scanner-card.js"
-    await hass.http.async_register_static_paths(
-        [StaticPathConfig(CARD_URL, str(card), cache_headers=False)]
-    )
-    add_extra_js_url(hass, f"{CARD_URL}?v={VERSION}")
+    # Kortene serveres af integrationen og indlæses automatisk i frontend
+    www = Path(__file__).parent / "www"
+    await hass.http.async_register_static_paths([
+        StaticPathConfig(f"{CARD_BASE_URL}/{name}", str(www / name), cache_headers=False)
+        for name in CARD_FILES
+    ])
+    for name in CARD_FILES:
+        add_extra_js_url(hass, f"{CARD_BASE_URL}/{name}?v={VERSION}")
     return True
 
 

@@ -11,7 +11,8 @@
  */
 const ZXING_URL = "https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js";
 const FORMATS = ["ean_13", "ean_8", "upc_a", "upc_e"];
-const REPEAT_MS = 2500;
+// Samme stregkode tælles først igen, når den har været ude af billedet så længe
+const GONE_MS = 1500;
 
 let zxingPromise = null;
 function loadZxing() {
@@ -72,6 +73,15 @@ class IndkobScannerCard extends HTMLElement {
           .aim { animation: sweep 1.6s ease-in-out infinite alternate; }
         }
         @keyframes sweep { from { top: 35%; } to { top: 65%; } }
+        .done {
+          position: absolute; inset: 0; display: flex; flex-direction: column;
+          align-items: center; justify-content: center; gap: 8px; padding: 16px;
+          text-align: center; color: #fff; font-weight: 500;
+          background: color-mix(in srgb, var(--success-color, #43a047) 82%, transparent);
+          opacity: 0; pointer-events: none; transition: opacity 120ms;
+        }
+        .done svg { width: 56px; height: 56px; }
+        .viewer.hit .done { opacity: 1; }
         .row { display: flex; gap: 8px; }
         button {
           flex: 1; font: inherit; font-weight: 500; padding: 12px 16px; cursor: pointer;
@@ -91,7 +101,8 @@ class IndkobScannerCard extends HTMLElement {
       </style>
       <ha-card header="${this._config.title || "Scan vare"}">
         <div class="wrap">
-          <div class="viewer"><video playsinline muted autoplay></video><div class="aim"></div></div>
+          <div class="viewer"><video playsinline muted autoplay></video><div class="aim"></div>
+            <div class="done" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg><span class="done-text"></span></div></div>
           <div class="row"><button class="toggle">Start kamera</button></div>
           <div class="row">
             <input inputmode="numeric" placeholder="Eller tast stregkoden" aria-label="Stregkode">
@@ -101,6 +112,7 @@ class IndkobScannerCard extends HTMLElement {
         </div>
       </ha-card>`;
     this._viewer = this._root.querySelector(".viewer");
+    this._doneText = this._root.querySelector(".done-text");
     this._video = this._root.querySelector("video");
     this._toggleBtn = this._root.querySelector(".toggle");
     this._status = this._root.querySelector(".status");
@@ -116,7 +128,46 @@ class IndkobScannerCard extends HTMLElement {
     this._status.className = `status ${kind}`;
   }
 
+  _unlockAudio() {
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (Ctx && !this._audio) this._audio = new Ctx();
+      if (this._audio && this._audio.state === "suspended") this._audio.resume();
+    } catch (_) { /* ingen lyd, ingen fejl */ }
+  }
+
+  _beep() {
+    const a = this._audio;
+    if (!a) return;
+    try {
+      const o = a.createOscillator();
+      const g = a.createGain();
+      o.type = "sine";
+      o.frequency.value = 1320;
+      g.gain.setValueAtTime(0.0001, a.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.25, a.currentTime + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + 0.12);
+      o.connect(g).connect(a.destination);
+      o.start();
+      o.stop(a.currentTime + 0.13);
+    } catch (_) { /* ignorer */ }
+  }
+
+  _haptic(type) {
+    // Companion-appen (iOS og Android) vibrerer ved HA's "haptic"-event
+    window.dispatchEvent(new CustomEvent("haptic", { detail: type }));
+    if (navigator.vibrate) navigator.vibrate(type === "failure" ? [60, 60, 60] : 80);
+  }
+
+  _flash(text) {
+    this._doneText.textContent = text;
+    this._viewer.classList.add("hit");
+    clearTimeout(this._flashTimer);
+    this._flashTimer = setTimeout(() => this._viewer && this._viewer.classList.remove("hit"), 1400);
+  }
+
   async _start() {
+    this._unlockAudio();
     if (!navigator.mediaDevices?.getUserMedia) {
       this._setStatus("Kameraet kan ikke bruges her. Åbn Home Assistant via HTTPS.", "err");
       return;
@@ -189,13 +240,19 @@ class IndkobScannerCard extends HTMLElement {
 
   async _found(code) {
     const now = Date.now();
-    if (this._busy || (code === this._last && now - this._lastAt < REPEAT_MS)) return;
+    const sameAsLast = code === this._last;
+    const goneLongEnough = now - (this._lastSeen || 0) > GONE_MS;
+    // Hver gang koden ses, flyttes "sidst set" frem. Så længe varen holdes
+    // foran kameraet, tælles den altså ikke igen.
+    this._lastSeen = now;
+    if (this._busy || (sameAsLast && !goneLongEnough)) return;
     this._last = code;
-    this._lastAt = now;
-    if (navigator.vibrate) navigator.vibrate(80);
-    this._viewer.classList.add("hit");
-    setTimeout(() => this._viewer && this._viewer.classList.remove("hit"), 600);
-    await this._add(code);
+    this._beep();
+    this._haptic("success");
+    this._flash("Slår op …");
+    const name = await this._add(code);
+    this._flash(name ? `Tilføjet: ${name}` : "Kunne ikke tilføje");
+    if (!name) this._haptic("failure");
     if (!this._config.continuous) this._stop();
   }
 
@@ -222,8 +279,10 @@ class IndkobScannerCard extends HTMLElement {
       const qty = r.quantity > 1 ? ` (${r.quantity} stk.)` : "";
       const note = r.product_id ? "" : " Varen vælges ved afsendelse.";
       this._setStatus(`Tilføjet: ${r.name || code}${qty}.${note}`, "ok");
+      return `${r.name || code}${qty}`;
     } catch (err) {
       this._setStatus(`Kunne ikke tilføje ${code}: ${err.message || err}`, "err");
+      return null;
     } finally {
       this._busy = false;
     }
