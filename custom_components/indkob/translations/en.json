@@ -26,10 +26,13 @@
     },
     "sensor": {
       "basket_total": {
-        "name": "nemlig basket total"
+        "name": "nemlig basket (products)"
       },
       "basket_products": {
         "name": "nemlig products in basket"
+      },
+      "basket_total_with_fees": {
+        "name": "nemlig basket (incl. fees)"
       }
     }
   },
@@ -93,6 +96,17 @@
         "limit": {
           "name": "Limit",
           "description": "Maximum number of results."
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Shopping",
+        "description": "Automatically pick the best nemlig match when an item is uncertain. Automatic picks are not remembered; edit an item's description to lock a choice.",
+        "data": {
+          "auto_pick": "Automatically pick best match"
         }
       }
     }

@@ -115,3 +115,10 @@ def display_name(off: dict[str, Any]) -> str:
 
 def normalize(text: str) -> str:
     return " ".join(re.findall(r"[a-zæøåé0-9]+", text.lower()))
+
+
+def is_relevant(query: str, p: Any) -> bool:
+    """Har produktet mindst ét ord til fælles med det søgte (i begge retninger)?"""
+    cand = re.sub(r"\s+", "", f"{p.name} {p.description} {p.brand}".lower())
+    q = re.sub(r"\s+", "", query.lower())
+    return any(t in cand for t in _tokens(query)) or any(t in q for t in _tokens(p.name))

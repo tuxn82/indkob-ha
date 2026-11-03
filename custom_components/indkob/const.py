@@ -2,6 +2,8 @@
 from datetime import timedelta
 
 DOMAIN = "indkob"
+VERSION = "0.2.1"
+CARD_URL = "/indkob/indkob-scanner-card.js"
 UPDATE_INTERVAL = timedelta(minutes=10)
 
 STORAGE_KEY = f"{DOMAIN}.list"
@@ -26,3 +28,6 @@ ATTR_QUERY = "query"
 ATTR_LIMIT = "limit"
 
 NOTIFICATION_ID = f"{DOMAIN}_unresolved"
+
+CONF_AUTO_PICK = "auto_pick"
+DEFAULT_AUTO_PICK = True

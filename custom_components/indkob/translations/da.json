@@ -26,10 +26,13 @@
     },
     "sensor": {
       "basket_total": {
-        "name": "nemlig kurv total"
+        "name": "nemlig kurv (varer)"
       },
       "basket_products": {
         "name": "nemlig varer i kurv"
+      },
+      "basket_total_with_fees": {
+        "name": "nemlig kurv (inkl. gebyrer)"
       }
     }
   },
@@ -93,6 +96,17 @@
         "limit": {
           "name": "Maks. antal",
           "description": "Maksimalt antal resultater."
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Indkøb",
+        "description": "Vælg automatisk bedste match fra nemlig, når en vare ikke er sikker. Automatiske valg huskes ikke; ret en vares beskrivelse for at låse et valg fast.",
+        "data": {
+          "auto_pick": "Vælg automatisk bedste match"
         }
       }
     }

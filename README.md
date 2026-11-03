@@ -9,7 +9,9 @@ En fælles indkøbsliste i Home Assistant, der kan fyldes via stregkodescanner, 
 1. **Fyld listen.** Scan en stregkode (`indkob.add_by_barcode`), sig "tilføj mælk til indkøbslisten", eller skriv i to-do-listen. Står varen der allerede, tælles antallet op.
 2. **Gennemgå listen** i HA's to-do-visning. Antal skrives foran navnet: `3 × Letmælk`.
 3. **Send til nemlig** (`indkob.send_to_nemlig`). Hver vare matches til et nemlig-produkt og lægges i kurven med det rigtige antal, hvorefter den markeres som klaret.
-4. **Usikre varer** bliver stående med en notifikation og forslag. Vælg ved at skrive `nemlig: [701011]` i varens beskrivelse (eller kald `indkob.resolve_item`). Valget huskes, så næste gang går det automatisk.
+4. **Valg af vare:** som standard vælges altid det bedste match fra nemlig automatisk. Varens beskrivelse viser, hvad der blev valgt. Er det forkert, så skriv det rigtige id i beskrivelsen, fx `nemlig: [701011]`. Dine egne valg huskes fast, automatiske valg gør ikke.
+
+Automatisk valg kan slås fra under **Indstillinger → Enheder og tjenester → Indkøb → Konfigurer**. Så bliver usikre varer stående med en notifikation og forslag, som du vælger imellem. Findes der slet intet relevant på nemlig, bliver varen altid stående.
 
 Stregkoder slås op i [Open Food Facts](https://world.openfoodfacts.org) for navn, mærke og mængde. Varens beskrivelse viser altid, hvilket nemlig-produkt den er koblet til.
 
@@ -21,11 +23,28 @@ Stregkoder slås op i [Open Food Facts](https://world.openfoodfacts.org) for nav
 
 ## Entiteter
 
-| Entitet | Beskrivelse |
+| Entitet (engelsk HA) | Beskrivelse |
 |---|---|
-| `todo.indkob_indkobsliste` | Indkøbslisten |
-| `sensor.indkob_nemlig_kurv_total` | nemlig-kurvens samlede pris |
-| `sensor.indkob_nemlig_varer_i_kurv` | Antal varer i nemlig-kurven |
+| `todo.indkob_shopping_list` | Indkøbslisten |
+| `sensor.indkob_nemlig_basket_total` | nemlig-kurvens varer i alt |
+| `sensor.indkob_nemlig_basket_incl_fees` | nemlig-kurven inkl. levering og gebyrer |
+| `sensor.indkob_nemlig_products_in_basket` | Antal varer i nemlig-kurven |
+
+Entitets-id'erne følger Home Assistants sprog, da de dannes ud fra navnene. Kører HA på dansk, hedder listen fx `todo.indkob_indkobsliste`.
+
+## Scan med telefonens kamera
+
+Integrationen leverer et dashboard-kort, der bruger telefonens kamera:
+
+```yaml
+type: custom:indkob-scanner-card
+continuous: true   # bliv ved med at scanne (standard)
+quantity: 1        # antal pr. scanning
+```
+
+Tryk **Start kamera**, og hold stregkoden ind i billedet. Telefonen vibrerer ved et fund, og varen kommer på indkøbslisten. Samme stregkode tælles først igen efter et par sekunder, så den ikke registreres flere gange ved et uheld. Man kan også taste stregkoden.
+
+Kameraet kræver, at Home Assistant åbnes via **HTTPS**. Virker kortet ikke i companion-appen, så giv appen adgang til kameraet i telefonens indstillinger, eller åbn HA i telefonens browser.
 
 ## Services
 
@@ -80,7 +99,6 @@ python3 tools/cli.py scan 5700426101217
 
 ## Kendte begrænsninger
 
-- Feltnavnene på nemligs kurvlinjer (`ProductId`/`Quantity`) er endnu ikke verificeret. Kør `tools/cli.py basket --raw` for at tjekke. Er de forkerte, kan "læg oveni"-logikken nulstille antallet for en vare, der allerede ligger i kurven.
 - Ingen re-auth-flow endnu: skifter du adgangskode, skal integrationen fjernes og tilføjes igen.
 
 ## Køreplan

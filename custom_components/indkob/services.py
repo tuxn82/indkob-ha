@@ -15,12 +15,12 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import (
     ATTR_BARCODE, ATTR_DRY_RUN, ATTR_ITEM, ATTR_KEY, ATTR_LIMIT, ATTR_PRODUCT_ID,
-    ATTR_QUANTITY, ATTR_QUERY, DOMAIN, EVENT_ITEM_ADDED, EVENT_SENT, NOTIFICATION_ID,
+    ATTR_QUANTITY, ATTR_QUERY, CONF_AUTO_PICK, DEFAULT_AUTO_PICK, DOMAIN, EVENT_ITEM_ADDED, EVENT_SENT, NOTIFICATION_ID,
     SERVICE_ADD_BY_BARCODE, SERVICE_FORGET_MATCH, SERVICE_RESOLVE_ITEM, SERVICE_SEARCH,
     SERVICE_SEND_TO_NEMLIG,
 )
 from .matching import (
-    BARCODE_THRESHOLD, TEXT_THRESHOLD, build_query, display_name, is_confident, rank,
+    BARCODE_THRESHOLD, TEXT_THRESHOLD, build_query, display_name, is_confident, is_relevant, rank,
     text_as_off,
 )
 from .nemlig_api import NemligError, lookup_ean
@@ -66,8 +66,26 @@ async def _match(data: IndkobData, item: Item) -> tuple[list[dict[str, Any]], bo
     if not products and item.off and item.off.get("product_name_da"):
         products = await data.client.search(item.off["product_name_da"])
     ranked = rank(off, products)[:5]
-    candidates = [p.to_dict() | {"score": round(s, 1)} for s, p in ranked]
+    candidates = [
+        p.to_dict() | {"score": round(s, 1), "relevant": is_relevant(query, p)} for s, p in ranked
+    ]
     return candidates, is_confident(ranked, threshold)
+
+
+def _pick(data: IndkobData, cands: list[dict[str, Any]], confident: bool) -> tuple[dict[str, Any] | None, bool]:
+    """Vælger et produkt. Returnerer (kandidat, skal_læres).
+
+    Sikre match læres som faste koblinger. Med auto-valg slået til tages det
+    bedste resultat også, men det læres ikke, så et forkert gæt ikke låses fast.
+    """
+    if not cands:
+        return None, False
+    if confident:
+        return cands[0], True
+    auto = data.entry.options.get(CONF_AUTO_PICK, DEFAULT_AUTO_PICK)
+    if auto and cands[0].get("relevant"):
+        return cands[0], False
+    return None, False
 
 
 def _label(c: dict[str, Any]) -> str:
@@ -104,9 +122,10 @@ async def _add_by_barcode(
 ) -> dict[str, Any]:
     sl = data.shopping_list
     known = sl.learned_for(barcode=ean)
-    off = None if known else await lookup_ean(data.session, ean)
-    if known:
-        name = known["name"].split(" – ")[0]
+    known_name = (known or {}).get("item_name")
+    off = None if known_name else await lookup_ean(data.session, ean)
+    if known_name:
+        name = known_name
     elif off:
         name = display_name(off)
     else:
@@ -122,8 +141,9 @@ async def _add_by_barcode(
         except _ERRORS as err:
             _LOGGER.debug("Match ved scanning fejlede: %s", err)
         else:
-            if confident:
-                sl.set_product(item, cands[0]["product_id"], _label(cands[0]))
+            choice, learn = _pick(data, cands, confident)
+            if choice:
+                sl.set_product(item, choice["product_id"], _label(choice), learn=learn)
 
     result = {
         "barcode": ean, "uid": item.uid, "name": item.name, "quantity": item.quantity,
@@ -151,8 +171,9 @@ async def _send_to_nemlig(
             except _ERRORS as err:
                 errors.append({"name": item.name, "error": str(err)})
                 continue
-            if confident:
-                sl.set_product(item, cands[0]["product_id"], _label(cands[0]))
+            choice, learn = _pick(data, cands, confident)
+            if choice:
+                sl.set_product(item, choice["product_id"], _label(choice), learn=learn)
             else:
                 sl.pending[item.uid] = cands
                 unresolved.append({"uid": item.uid, "name": item.name, "candidates": cands})

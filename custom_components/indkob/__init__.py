@@ -2,8 +2,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 
 import aiohttp
+
+from homeassistant.components.frontend import add_extra_js_url
+from homeassistant.components.http import StaticPathConfig
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -13,7 +17,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import CARD_URL, DOMAIN, VERSION
 from .coordinator import NemligCoordinator
 from .nemlig_api import NemligAuthError, NemligClient, NemligError
 from .services import async_setup_services
@@ -25,6 +29,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 @dataclass
 class IndkobData:
+    entry: ConfigEntry
     client: NemligClient
     session: aiohttp.ClientSession
     coordinator: NemligCoordinator
@@ -36,6 +41,12 @@ type IndkobConfigEntry = ConfigEntry[IndkobData]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_setup_services(hass)
+    # Scanner-kortet serveres af integrationen og indlæses automatisk i frontend
+    card = Path(__file__).parent / "www" / "indkob-scanner-card.js"
+    await hass.http.async_register_static_paths(
+        [StaticPathConfig(CARD_URL, str(card), cache_headers=False)]
+    )
+    add_extra_js_url(hass, f"{CARD_URL}?v={VERSION}")
     return True
 
 
@@ -56,7 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IndkobConfigEntry) -> bo
     shopping_list = ShoppingList(hass, entry.entry_id)
     await shopping_list.async_load()
 
-    entry.runtime_data = IndkobData(client, session, coordinator, shopping_list)
+    entry.runtime_data = IndkobData(entry, client, session, coordinator, shopping_list)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 

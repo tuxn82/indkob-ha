@@ -40,6 +40,14 @@ SENSORS: tuple[NemligSensorDescription, ...] = (
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement="DKK",
         suggested_display_precision=2,
+        value_fn=lambda b: _num(b.get("TotalProductsPrice")),
+    ),
+    NemligSensorDescription(
+        key="basket_total_with_fees",
+        translation_key="basket_total_with_fees",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement="DKK",
+        suggested_display_precision=2,
         value_fn=lambda b: _num(b.get("TotalPrice")),
     ),
     NemligSensorDescription(

@@ -41,7 +41,8 @@ class Item:
     def description(self) -> str | None:
         lines = []
         if self.product_id:
-            lines.append(f"nemlig: {self.product_name or ''} [{self.product_id}]".replace(":  [", ": ["))
+            label = self.product_name if self.product_name not in (None, "", self.product_id) else ""
+            lines.append(f"nemlig: {label} [{self.product_id}]" if label else f"nemlig: [{self.product_id}]")
         if self.note:
             lines.append(self.note)
         return "\n".join(lines) or None
@@ -161,7 +162,7 @@ class ShoppingList:
         item.product_id = str(product_id)
         item.product_name = name or (item.product_name if same else None)
         if learn:
-            entry = {"product_id": str(product_id), "name": name or str(product_id)}
+            entry = {"product_id": str(product_id), "name": item.product_name or "", "item_name": item.name}
             if item.barcode:
                 self.learned[f"ean:{item.barcode}"] = entry
             self.learned[f"txt:{normalize(item.name)}"] = entry
