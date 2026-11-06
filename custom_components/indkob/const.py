@@ -2,7 +2,7 @@
 from datetime import timedelta
 
 DOMAIN = "indkob"
-VERSION = "0.2.3"
+VERSION = "0.2.4"
 CARD_BASE_URL = "/indkob"
 CARD_FILES = ("indkob-scanner-card.js", "indkob-list-card.js")
 UPDATE_INTERVAL = timedelta(minutes=10)

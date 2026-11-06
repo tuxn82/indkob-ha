@@ -44,7 +44,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Kortene serveres af integrationen og indlæses automatisk i frontend
     www = Path(__file__).parent / "www"
     await hass.http.async_register_static_paths([
-        StaticPathConfig(f"{CARD_BASE_URL}/{name}", str(www / name), cache_headers=False)
+        StaticPathConfig(f"{CARD_BASE_URL}/{name}", str(www / name), cache_headers=True)
         for name in CARD_FILES
     ])
     for name in CARD_FILES:

@@ -111,6 +111,10 @@ python3 tools/cli.py basket --raw
 python3 tools/cli.py scan 5700426101217
 ```
 
+## Fejlfinding
+
+Viser et kort **"Configuration error"**, er kortets JavaScript ikke indlæst endnu. Luk Home Assistant-appen helt og åbn den igen. Hjælper det ikke, så nulstil frontend-cachen under **Indstillinger → Companion app → Fejlfinding**. Tryk på fejlkortet for at se den præcise årsag. Kortene serveres med cache og versionsnummer, så de hentes kun igen, når integrationen opdateres.
+
 ## Kendte begrænsninger
 
 - Ingen re-auth-flow endnu: skifter du adgangskode, skal integrationen fjernes og tilføjes igen.
